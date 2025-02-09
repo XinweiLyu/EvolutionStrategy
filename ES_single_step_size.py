@@ -63,7 +63,7 @@ def initialize_population(mu, dim, bounds, sigma_init):
     # generate individuals as np.arrays of size (mu,dim) with values between the given bounds
     population = np.random.uniform(bounds[0], bounds[1], (mu, dim))
     # same for the sigma values (one sigma per individual)
-    sigma = np.full((mu,), sigma_init)
+    sigma = np.full((mu,), sigma_init) # 每个个体只有一个sigma，全局步长
     return population, sigma
 
 
@@ -90,25 +90,25 @@ def generate_offspring(population, sigma, mu, lambd, dim, bounds, lr, sigma_boun
 
 def select_survivors(offspring, mu, population, sigma, strategy='comma'):
     """Select the top mu individuals from offspring based on fitness."""
-    if strategy == 'comma':
+    if strategy == 'comma': # (mu, lambda) strategy
         offspring.sort(key=lambda x: x[2])  # Sort by fitness (ascending, so best first)
         # Select top mu individuals and their sigmas
         population = np.array([x[0] for x in offspring[:mu]])
         sigma = np.array([x[1] for x in offspring[:mu]])
         best_solution, best_fitness = offspring[0][0], offspring[0][2]
         return population, sigma, best_solution, best_fitness
-    elif strategy == 'plus':
+    elif strategy == 'plus': # (mu+lambda) strategy
         # Combine offspring and parent populations
-        combined_pop = np.vstack((population, np.array([x[0] for x in offspring])))
-        combined_sigma = np.concatenate((sigma, np.array([x[1] for x in offspring])))
-        combined_fitness = np.array([x[2] for x in offspring])
+        combined_pop = np.vstack((population, np.array([x[0] for x in offspring]))) # 合并父代和子代 纵向合并，30+200
+        combined_sigma = np.concatenate((sigma, np.array([x[1] for x in offspring]))) # 合并父代和子代的sigma
+        combined_fitness = np.array([x[2] for x in offspring]) # 合并父代和子代的fitness
         # Sort combined population by fitness
-        combined_pop = combined_pop[np.argsort(combined_fitness)]
-        combined_sigma = combined_sigma[np.argsort(combined_fitness)]
+        combined_pop = combined_pop[np.argsort(combined_fitness)] # 按照fitness排序
+        combined_sigma = combined_sigma[np.argsort(combined_fitness)] # 按照fitness排序
         # Select top mu individuals
-        population = combined_pop[:mu]
-        sigma = combined_sigma[:mu]
-        best_solution, best_fitness = population[0], combined_fitness[0]
+        population = combined_pop[:mu] # 选择前30个个体
+        sigma = combined_sigma[:mu] # 选择前30个sigma
+        best_solution, best_fitness = population[0], combined_fitness[0] # 选择最好的个体和fitness
         return population, sigma, best_solution, best_fitness
 
 
